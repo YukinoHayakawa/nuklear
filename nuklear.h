@@ -12669,12 +12669,15 @@ nk_font_bake_pack(struct nk_font_baker *baker,
     NK_ASSERT(count);
     NK_ASSERT(alloc);
 
+    int max_size = 0;
     if (!image_memory || !width || !height || !config_list || !count) return nk_false;
     for (config_iter = config_list; config_iter; config_iter = config_iter->next) {
         it = config_iter;
         do {range_count = nk_range_count(it->range);
             total_range_count += range_count;
             total_glyph_count += nk_range_glyph_count(it->range, range_count);
+            if(it->size > max_size)
+                max_size = (int)ceil(it->size);
         } while ((it = it->n) != config_iter);
     }
     /* setup font baker from temporary memory */
@@ -12685,7 +12688,7 @@ nk_font_bake_pack(struct nk_font_baker *baker,
         } while ((it = it->n) != config_iter);
     }
     *height = 0;
-    *width = (total_glyph_count > 1000) ? 1024 : 512;
+    *width = nk_round_up_pow2((int)sqrt(max_size * max_size * total_glyph_count));
     nk_tt_PackBegin(&baker->spc, 0, (int)*width, (int)max_height, 0, 1, alloc);
     {
         int input_i = 0;
